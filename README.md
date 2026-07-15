@@ -23,7 +23,7 @@
 ---
 1. 克隆仓库：
    ```bash
-   git clone <repo-url>
+   git clone https://github.com/Taullarkura/LimbusCompanyLocalizeCustomer.git
    ```
 2. 使用 Visual Studio 打开 `LinbusCompanyLocalizeCustomer.slnx` 或在命令行下：
    ```bash
