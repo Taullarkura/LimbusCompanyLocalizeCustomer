@@ -1161,7 +1161,7 @@ namespace LinbusCompanyLocalizeCustomer
             {
                 var json = JsonConvert.SerializeObject(CurrentPrjFileJson, Formatting.Indented);
                 File.WriteAllText(CurrentPrjFilePath, json);
-                new Notification.Config(new Target(this), "提示", json, TType.Info, TAlignFrom.BR).SetShowInWindow().SetAutoClose(5).open();
+               
             }
             catch (Exception ex)
             {
