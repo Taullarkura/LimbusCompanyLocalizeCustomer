@@ -82,7 +82,7 @@ namespace LinbusCompanyLocalizeCustomer
         /// 下载并返回本地保存路径。下载期间会显示一个简单进度窗口，方法完成后文件可立即使用。
         /// 返回 null 表示下载失败。
         /// </summary>
-        private string? DownloadLatestZeroAssoLLCAsync()
+        private string? DownloadLatestZeroAssoLLCSync()
         {
             try
             {
@@ -540,7 +540,13 @@ namespace LinbusCompanyLocalizeCustomer
             var Export_to_zip_Item = new MenuItem("导出为zip压缩包...") { Tag = "export_zip" };
             ExportItem.SetSub(Export_to_zip_Item, Export_to_json_Item);
             ExportItem.Enabled = false;
+     
             TopMenu.Items.Add(ExportItem);
+            var AboutItem = new MenuItem("关于");
+            var AuthorInfoItem = new MenuItem("作者信息") { Tag = "authorinfo" };
+            var ThreePartyItem = new MenuItem("第三方许可") { Tag = "3rdparty" };
+            AboutItem.SetSub(AuthorInfoItem,ThreePartyItem);
+            TopMenu.Items.Add(AboutItem);
             //LCLCToolTip.SetTip(Export_to_zip_Item,"")
             TopMenu.Height = 90;
             TopMenu.SelectChanged += TopMenu_SelectChanged;
@@ -656,7 +662,7 @@ namespace LinbusCompanyLocalizeCustomer
                 var dia_result = MessageBox.Show("检测到应用目录中不存在零协会汉化，是否自动下载最新汉化？\n选择“是”将尝试自动下载汉化，“否”将退出本应用。\n你可以手动复制边狱巴士目录\\LimbusCompany_Data\\Lang下的LLC_zh-CN文件夹到本应用目录再启动本应用", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
                 if (dia_result == DialogResult.Yes)
                 {
-                    var result = DownloadLatestZeroAssoLLCAsync();
+                    var result = DownloadLatestZeroAssoLLCSync();
                     if (result == null)
                     {
                         this.Close();
@@ -724,7 +730,7 @@ namespace LinbusCompanyLocalizeCustomer
                 var dia_result = MessageBox.Show("零协会汉化存在更新！是否自动更新？\n不更新也可继续使用本编辑器，但无法修改最新汉化内容\n你也可以手动覆盖文件更新", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
                 if (dia_result == DialogResult.Yes)
                 {
-                    var result = DownloadLatestZeroAssoLLCAsync();
+                    var result = DownloadLatestZeroAssoLLCSync();
                     if (result == null)
                     {
                         MessageBox.Show("更新失败。请重试或尝试手动覆盖更新。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -789,6 +795,12 @@ namespace LinbusCompanyLocalizeCustomer
                         break;
                     case "export_zip":
                         ExportPrjToZip(); //导出为zip
+                        break;
+                    case "3rdparty":
+                        MessageBox.Show("第三方许可\r\n\r\n本工具使用的汉化基础文件：\r\nLocalize Limbus Company\r\n由 Localize Limbus Company 项目贡献者 创作，\r\n根据 CC BY-NC-SA 4.0 许可。\r\n\r\n许可链接：https://creativecommons.org/licenses/by-nc-sa/4.0/\r\n原许可文件随下载文件提供。\r\n\r\n修改说明：本工具可能对该文件进行改编。\r\n改编后的文件同样以 CC BY-NC-SA 4.0 发布。", "信息", MessageBoxButtons.OK, MessageBoxIcon.Information); ;
+                        break;
+                    case "authorinfo":
+                        MessageBox.Show("本工具由bilibili@一只小Lar开发\r\n使用AI辅助开发\r\n项目地址:https://github.com/Taullarkura/LimbusCompanyLocalizeCustomer");
                         break;
                 }
             }
