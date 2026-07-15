@@ -219,7 +219,7 @@ namespace LinbusCompanyLocalizeCustomer
             else
                 new Notification.Config(new Target(this), "错误", ex.ToString(), TType.Error, TAlignFrom.BR).SetShowInWindow().open();
         }
-
+        
         protected override void OnCreateControl()
         {
             //获取巴士路径
@@ -349,6 +349,7 @@ namespace LinbusCompanyLocalizeCustomer
             Export_to_json_Item.Tag = "export_json";
             var Export_to_zip_Item = new MenuItem("导出为zip压缩包...") { Tag = "export_zip" };
             ExportItem.SetSub(Export_to_zip_Item, Export_to_json_Item);
+            ExportItem.Enabled = false;
             TopMenu.Items.Add(ExportItem);
             //LCLCToolTip.SetTip(Export_to_zip_Item,"")
             TopMenu.Height = 90;
@@ -480,7 +481,7 @@ namespace LinbusCompanyLocalizeCustomer
                 }
                 else
                 {
-                    MessageBox.Show("NO THIS IDT:" + selected_item.Text);
+                    new Notification.Config(new Target(this), "提示", "NO THIS IDT:" + selected_item.Text, TType.Info, TAlignFrom.BR).SetShowInWindow().SetAutoClose(5).open();
                 }
             }
         }
@@ -517,12 +518,12 @@ namespace LinbusCompanyLocalizeCustomer
             {
                 if (CurrentPrjFileJson == null)
                 {
-                    MessageBox.Show("当前无打开的项目文件，请先打开或创建项目。");
+                    new Notification.Config(new Target(this), "提示", "当前无打开的项目文件，请先打开或创建项目。", TType.Info, TAlignFrom.BR).SetShowInWindow().SetAutoClose(5).open();
                     return;
                 }
                 if (string.IsNullOrEmpty(LLCPath) || !Directory.Exists(LLCPath))
                 {
-                    MessageBox.Show("未配置或找不到 LLCPath，请先设置游戏路径。");
+                    new Notification.Config(new Target(this), "提示", "未配置或找不到 LLCPath，请先设置游戏路径。", TType.Info, TAlignFrom.BR).SetShowInWindow().SetAutoClose(5).open();
                     return;
                 }
 
@@ -620,7 +621,7 @@ namespace LinbusCompanyLocalizeCustomer
                     }
                 }
 
-                MessageBox.Show("已导出并修改 JSON 文件到: " + outDir);
+                new Notification.Config(new Target(this), "提示", "已导出并修改 JSON 文件到: " + outDir, TType.Info, TAlignFrom.BR).SetShowInWindow().SetAutoClose(5).open();
             }
             catch (Exception ex)
             {
@@ -761,7 +762,7 @@ namespace LinbusCompanyLocalizeCustomer
                 }
                 catch { }
 
-                MessageBox.Show("已生成 ZIP 文件: " + outFile);
+                new Notification.Config(new Target(this), "提示", "已生成 ZIP 文件: " + outFile, TType.Info, TAlignFrom.BR).SetShowInWindow().SetAutoClose(5).open();
             }
             catch (Exception ex)
             {
@@ -827,6 +828,7 @@ namespace LinbusCompanyLocalizeCustomer
                 CurrentPrjFilePath = file;
                 File.WriteAllText(file, JsonConvert.SerializeObject(CurrentPrjFileJson, Formatting.Indented));
                 panel1.Enabled = true;
+                TopMenu.Items[1].Enabled = true;
                 if (Notification.contains("hintproject"))
                     Notification.close_id("hintproject");
             }
@@ -853,6 +855,7 @@ namespace LinbusCompanyLocalizeCustomer
                         // 将项目 JSON 中的自定义数据同步到界面
                         ApplyProjectJsonToUI();
                         panel1.Enabled = true;
+                        TopMenu.Items[1].Enabled = true;
                         if (Notification.contains("hintproject"))
                             Notification.close_id("hintproject");
                     }
@@ -875,7 +878,7 @@ namespace LinbusCompanyLocalizeCustomer
             {
                 var json = JsonConvert.SerializeObject(CurrentPrjFileJson, Formatting.Indented);
                 File.WriteAllText(CurrentPrjFilePath, json);
-                MessageBox.Show(json);
+                new Notification.Config(new Target(this), "提示", json, TType.Info, TAlignFrom.BR).SetShowInWindow().SetAutoClose(5).open();
             }
             catch (Exception ex)
             {
@@ -894,7 +897,7 @@ namespace LinbusCompanyLocalizeCustomer
             {
                 if (CurrentPrjFileJson == null)
                 {
-                    MessageBox.Show("当前无打开的项目文件，请先打开或创建项目。");
+                    new Notification.Config(new Target(this), "提示", "当前无打开的项目文件，请先打开或创建项目。", TType.Info, TAlignFrom.BR).SetShowInWindow().SetAutoClose(5).open();
                     return;
                 }
 
@@ -1023,7 +1026,7 @@ namespace LinbusCompanyLocalizeCustomer
                     }
                 }
 
-                MessageBox.Show("已将项目中的修改应用到本地文件（LLCPath），并已同步内存数据。保存项目后调用 ApplyProjectJsonToUI 以重新应用项目覆盖到界面。");
+                new Notification.Config(new Target(this), "提示", "已将项目中的修改应用到本地文件（LLCPath），并已同步内存数据。保存项目后调用 ApplyProjectJsonToUI 以重新应用项目覆盖到界面。", TType.Info, TAlignFrom.BR).SetShowInWindow().SetAutoClose(5).open();
             }
             catch (Exception ex)
             {
