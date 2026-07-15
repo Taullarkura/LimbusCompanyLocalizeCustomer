@@ -219,7 +219,7 @@ namespace LinbusCompanyLocalizeCustomer
             else
                 new Notification.Config(new Target(this), "错误", ex.ToString(), TType.Error, TAlignFrom.BR).SetShowInWindow().open();
         }
-        
+
         protected override void OnCreateControl()
         {
             //获取巴士路径

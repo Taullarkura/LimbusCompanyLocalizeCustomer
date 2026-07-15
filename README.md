@@ -1,4 +1,4 @@
-# LinbusCompanyLocalizeCustomer
+# LimbusCompanyLocalizeCustomer
 
 简要说明
 ---
@@ -25,9 +25,9 @@
    ```bash
    git clone https://github.com/Taullarkura/LimbusCompanyLocalizeCustomer.git
    ```
-2. 使用 Visual Studio 打开 `LinbusCompanyLocalizeCustomer.slnx` 或在命令行下：
+2. 使用 Visual Studio 打开 `LimbusCompanyLocalizeCustomer.slnx` 或在命令行下：
    ```bash
-   dotnet build LinbusCompanyLocalizeCustomer.slnx
+   dotnet build LimbusCompanyLocalizeCustomer.slnx
    ```
 3. 在 IDE 中运行或直接运行输出目录下的可执行文件。
 
