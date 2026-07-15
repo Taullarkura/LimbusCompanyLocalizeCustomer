@@ -3,6 +3,14 @@ using LinbusCompanyLocalizeCustomer.JsonClass;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.IO.Compression;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
+using System.Linq;
+using System.Windows.Forms;
+using System.Drawing;
+using Label = AntdUI.Label;
+using LimbusCompanyLocalizeCustomer;
 
 namespace LinbusCompanyLocalizeCustomer
 {
@@ -55,6 +63,186 @@ namespace LinbusCompanyLocalizeCustomer
             InitializeComponent();
         }
 
+        // 返回应用目录下的 LLC_zh-CN（下载的本地副本）
+        private string GetLocalLLCSourcePath()
+        {
+            var local = Path.Combine(App_path, "LLC_zh-CN");
+            if (Directory.Exists(local))
+                return local;
+            else
+            {
+                MessageBox.Show("LLC_zh-CN 不存在，请检查应用目录下是否有汉化文件夹!","错误",MessageBoxButtons.OK,MessageBoxIcon.Error);
+                this.Close();
+                Application.Exit();
+                return "";
+            }
+            //return LLCPath ?? local;
+        }
+        /// <summary>
+        /// 下载并返回本地保存路径。下载期间会显示一个简单进度窗口，方法完成后文件可立即使用。
+        /// 返回 null 表示下载失败。
+        /// </summary>
+        private string? DownloadLatestZeroAssoLLCAsync()
+        {
+            try
+            {
+                var latestUrl = "https://github.com/LocalizeLimbusCompany/LocalizeLimbusCompany/releases/latest";
+
+                // 获取 tag（不跟随重定向以读取 Location）
+                string? tag = null;
+                using (var handler = new HttpClientHandler() { AllowAutoRedirect = false })
+                using (var client = new HttpClient(handler))
+                {
+                    client.DefaultRequestHeaders.UserAgent.ParseAdd("LimbusCompanyLocalizeCustomer/1.0");
+                    var resp = client.GetAsync(latestUrl).Result;
+                    if (resp.Headers.Location != null)
+                    {
+                        var baseUri = resp.RequestMessage.RequestUri;
+                        var abs = new Uri(baseUri, resp.Headers.Location);
+                        tag = abs.Segments.Last().TrimEnd('/');
+                    }
+                }
+
+                if (string.IsNullOrEmpty(tag))
+                {
+                    // 退回到允许重定向，再从最终 URL 获取 tag
+                    using (var client = new HttpClient())
+                    {
+                        client.DefaultRequestHeaders.UserAgent.ParseAdd("LimbusCompanyLocalizeCustomer/1.0");
+                        var final = client.GetAsync(latestUrl).Result;
+                        tag = final.RequestMessage?.RequestUri?.Segments.Last()?.TrimEnd('/');
+                    }
+                }
+
+                if (string.IsNullOrEmpty(tag))
+                {
+                    throw new Exception("无法解析最新 release 的 tag。");
+                }
+
+                var fileName = "LimbusLocalize_"+tag + ".zip";
+                var downloadUrl = $"https://github.com/LocalizeLimbusCompany/LocalizeLimbusCompany/releases/download/{tag}/{fileName}";
+                var outPath = Path.Combine(App_path, fileName);
+
+                using (var progressForm = new DownloadProgressForm())
+                {
+                    progressForm.Show(this);
+                    try
+                    {
+                        using (var dlClient = new HttpClient())
+                        {
+                            dlClient.DefaultRequestHeaders.UserAgent.ParseAdd("LimbusCompanyLocalizeCustomer/1.0");
+                            var response = dlClient.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead).Result;
+                            if (!response.IsSuccessStatusCode)
+                                throw new Exception($"下载失败: {response.StatusCode} {downloadUrl}");
+
+                            var total = response.Content.Headers.ContentLength ?? -1L;
+                            using (var contentStream = response.Content.ReadAsStreamAsync().Result)
+                            using (var fs = File.Create(outPath))
+                            {
+                                var buffer = new byte[81920];
+                                long totalRead = 0;
+                                int read;
+                                while ((read = contentStream.ReadAsync(buffer, 0, buffer.Length).Result) > 0)
+                                {
+                                    fs.Write(buffer, 0, read);
+                                    totalRead += read;
+                                    if (total > 0)
+                                    {
+                                        var percent = (int)(totalRead * 100 / total);
+                                        progressForm.SetProgress(percent, totalRead, total);
+                                        // 强制刷新以确保在某些 UI 调度情况下文本/进度条立即重绘
+                                        progressForm.Refresh();
+                                    }
+                                    else
+                                    {
+                                        progressForm.SetProgress(-1, totalRead, total);
+                                        // 强制刷新以确保在某些 UI 调度情况下文本/进度条立即重绘
+                                        progressForm.Refresh();
+                                    }
+                                }
+                            }
+                        }
+                        // 将压缩包中的 LLC_zh-CN 文件夹解压到应用根目录
+                        try
+                        {
+                            using (var archive = ZipFile.OpenRead(outPath))
+                            {
+                                // 规范前缀，ZIP 内通常使用 '/'
+                                var prefix = "LimbusCompany_Data/Lang/LLC_zh-CN/";
+                                // 计算需要解压的总大小
+                                long totalUncompress = 0;
+                                var entries = archive.Entries.Where(e => e.FullName.Replace('\\','/').StartsWith(prefix, StringComparison.OrdinalIgnoreCase)).ToList();
+                                foreach (var e in entries)
+                                {
+                                    // 目录条目长度为 0
+                                    try { totalUncompress += e.Length; } catch { }
+                                }
+
+                                long totalUnzipped = 0;
+                                foreach (var entry in entries)
+                                {
+                                    var rel = entry.FullName.Replace('\\','/');
+                                    if (rel.EndsWith("/"))
+                                        continue; // skip directories
+
+                                    var relativePath = rel.Substring(prefix.Length);
+                                    if (string.IsNullOrEmpty(relativePath))
+                                        continue;
+
+                                    var destPath = Path.Combine(App_path, "LLC_zh-CN", relativePath);
+                                    var destDir = Path.GetDirectoryName(destPath);
+                                    if (!Directory.Exists(destDir)) Directory.CreateDirectory(destDir);
+
+                                    using (var entryStream = entry.Open())
+                                    using (var outFs = File.Create(destPath))
+                                    {
+                                        var buffer2 = new byte[81920];
+                                        int read2;
+                                        while ((read2 = entryStream.Read(buffer2, 0, buffer2.Length)) > 0)
+                                        {
+                                            outFs.Write(buffer2, 0, read2);
+                                            totalUnzipped += read2;
+                                            if (totalUncompress > 0)
+                                            {
+                                                var pct = (int)(totalUnzipped * 100 / totalUncompress);
+                                                progressForm.SetUnzip(pct, totalUnzipped, totalUncompress);
+                                            }
+                                            else
+                                            {
+                                                progressForm.SetUnzip(-1, totalUnzipped, totalUncompress);
+                                            }
+                                            // 强制刷新以便 UI 及时更新
+                                            progressForm.Refresh();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error("解压失败: " + ex.ToString());
+                            // 不要阻止后续关闭窗口与通知；抛出让外层捕获并通知
+                            throw;
+                        }
+                    }
+                    finally
+                    {
+                        // 确保关闭窗口在 UI 线程
+                        if (!progressForm.IsDisposed)
+                            progressForm.Close();
+                    }
+                }
+
+                new Notification.Config(new Target(this), "提示", "已下载最新汉化到: " + outPath, TType.Info, TAlignFrom.BR).SetShowInWindow().SetAutoClose(5).open();
+                return outPath;
+            }
+            catch (Exception ex)
+            {
+                ExceptionNoticeHandle(ex, "下载最新汉化失败");
+                Logger.Error(ex.ToString());
+                return null;
+            }
+        }
         private void ApplyProjectJsonToUI()
         {
             try
@@ -222,6 +410,8 @@ namespace LinbusCompanyLocalizeCustomer
 
         protected override void OnCreateControl()
         {
+            //检查汉化
+            CheckLLC();
             //获取巴士路径
             try
             {
@@ -371,9 +561,13 @@ namespace LinbusCompanyLocalizeCustomer
         //载入汉化文本
         public void LoadIdtText()
         {
-            if (LLCPath == null)
+            var src = GetLocalLLCSourcePath();
+            if (string.IsNullOrEmpty(src) || !Directory.Exists(src))
                 return;
-            string Idts_text = File.ReadAllText(Path.Combine(LLCPath, "Personalities.json"));
+            var personalitiesPath = Path.Combine(src, "Personalities.json");
+            if (!File.Exists(personalitiesPath))
+                return;
+            string Idts_text = File.ReadAllText(personalitiesPath);
             IdtList = JsonConvert.DeserializeObject<IdtList>(Idts_text);
             for (int i = 1; i <= 12; i++)
             {
@@ -393,9 +587,14 @@ namespace LinbusCompanyLocalizeCustomer
         }
         public void LoadSkillInfo()
         {
+            var src = GetLocalLLCSourcePath();
+            if (string.IsNullOrEmpty(src) || !Directory.Exists(src))
+                return;
             foreach (var file in SKILL_FILES)
             {
-                dynamic json = JsonConvert.DeserializeObject(File.ReadAllText(Path.Combine(LLCPath, file + ".json")));
+                var path = Path.Combine(src, file + ".json");
+                if (!File.Exists(path)) continue;
+                dynamic json = JsonConvert.DeserializeObject(File.ReadAllText(path));
                 var dataList = json.dataList;
                 var file_name = Path.GetFileName(file);
                 foreach (var skill in dataList)
@@ -449,9 +648,27 @@ namespace LinbusCompanyLocalizeCustomer
 
         }
         //保存人格名
-        private void Form1_Load(object sender, EventArgs e)
+        private void CheckLLC()
         {
-
+            var local = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LLC_zh-CN");
+            if (!Directory.Exists(local))
+            {
+                var dia_result=MessageBox.Show("检测到应用目录中不存在零协会汉化，是否自动下载最新汉化？\n选择“是”将尝试自动下载汉化，“否”将退出本应用。\n你可以手动复制边狱巴士目录\\LimbusCompany_Data\\Lang下的LLC_zh-CN文件夹到本应用目录再启动本应用", "提示",MessageBoxButtons.YesNo,MessageBoxIcon.Information);
+                if(dia_result== DialogResult.Yes)
+                {
+                    var result=DownloadLatestZeroAssoLLCAsync();
+                    if(result==null)
+                    {
+                        this.Close();
+                        Application.Exit();
+                    }
+                }
+                else
+                {
+                    this.Close();
+                    Application.Exit();
+                }
+            }
         }
         private void MainForm_KeyDown(object sender, KeyEventArgs e)
         {
@@ -1035,4 +1252,5 @@ namespace LinbusCompanyLocalizeCustomer
             }
         }
     }
+
 }

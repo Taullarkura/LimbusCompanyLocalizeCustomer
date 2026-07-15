@@ -189,7 +189,7 @@
             KeyPreview = true;
             Name = "MainForm";
             Text = "边狱巴士公司汉化编辑器";
-            Load += Form1_Load;
+           
             KeyDown += MainForm_KeyDown;
             IdtInfoGroup.ResumeLayout(false);
             groupBox1.ResumeLayout(false);
