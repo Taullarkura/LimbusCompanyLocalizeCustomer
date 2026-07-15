@@ -71,7 +71,7 @@ namespace LinbusCompanyLocalizeCustomer
                 return local;
             else
             {
-                MessageBox.Show("LLC_zh-CN 不存在，请检查应用目录下是否有汉化文件夹!","错误",MessageBoxButtons.OK,MessageBoxIcon.Error);
+                MessageBox.Show("LLC_zh-CN 不存在，请检查应用目录下是否有汉化文件夹!", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 this.Close();
                 Application.Exit();
                 return "";
@@ -119,7 +119,7 @@ namespace LinbusCompanyLocalizeCustomer
                     throw new Exception("无法解析最新 release 的 tag。");
                 }
 
-                var fileName = "LimbusLocalize_"+tag + ".zip";
+                var fileName = "LimbusLocalize_" + tag + ".zip";
                 var downloadUrl = $"https://github.com/LocalizeLimbusCompany/LocalizeLimbusCompany/releases/download/{tag}/{fileName}";
                 var outPath = Path.Combine(App_path, fileName);
 
@@ -171,7 +171,7 @@ namespace LinbusCompanyLocalizeCustomer
                                 var prefix = "LimbusCompany_Data/Lang/LLC_zh-CN/";
                                 // 计算需要解压的总大小
                                 long totalUncompress = 0;
-                                var entries = archive.Entries.Where(e => e.FullName.Replace('\\','/').StartsWith(prefix, StringComparison.OrdinalIgnoreCase)).ToList();
+                                var entries = archive.Entries.Where(e => e.FullName.Replace('\\', '/').StartsWith(prefix, StringComparison.OrdinalIgnoreCase)).ToList();
                                 foreach (var e in entries)
                                 {
                                     // 目录条目长度为 0
@@ -181,7 +181,7 @@ namespace LinbusCompanyLocalizeCustomer
                                 long totalUnzipped = 0;
                                 foreach (var entry in entries)
                                 {
-                                    var rel = entry.FullName.Replace('\\','/');
+                                    var rel = entry.FullName.Replace('\\', '/');
                                     if (rel.EndsWith("/"))
                                         continue; // skip directories
 
@@ -233,7 +233,7 @@ namespace LinbusCompanyLocalizeCustomer
                     }
                 }
 
-                new Notification.Config(new Target(this), "提示", "已下载最新汉化到: " + outPath, TType.Info, TAlignFrom.BR).SetShowInWindow().SetAutoClose(5).open();
+                new Notification.Config(new Target(this), "提示", "已下载最新汉化" , TType.Info, TAlignFrom.BR).SetShowInWindow().SetAutoClose(5).open();
                 return outPath;
             }
             catch (Exception ex)
@@ -653,11 +653,11 @@ namespace LinbusCompanyLocalizeCustomer
             var local = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LLC_zh-CN");
             if (!Directory.Exists(local))
             {
-                var dia_result=MessageBox.Show("检测到应用目录中不存在零协会汉化，是否自动下载最新汉化？\n选择“是”将尝试自动下载汉化，“否”将退出本应用。\n你可以手动复制边狱巴士目录\\LimbusCompany_Data\\Lang下的LLC_zh-CN文件夹到本应用目录再启动本应用", "提示",MessageBoxButtons.YesNo,MessageBoxIcon.Information);
-                if(dia_result== DialogResult.Yes)
+                var dia_result = MessageBox.Show("检测到应用目录中不存在零协会汉化，是否自动下载最新汉化？\n选择“是”将尝试自动下载汉化，“否”将退出本应用。\n你可以手动复制边狱巴士目录\\LimbusCompany_Data\\Lang下的LLC_zh-CN文件夹到本应用目录再启动本应用", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+                if (dia_result == DialogResult.Yes)
                 {
-                    var result=DownloadLatestZeroAssoLLCAsync();
-                    if(result==null)
+                    var result = DownloadLatestZeroAssoLLCAsync();
+                    if (result == null)
                     {
                         this.Close();
                         Application.Exit();
@@ -668,6 +668,72 @@ namespace LinbusCompanyLocalizeCustomer
                     this.Close();
                     Application.Exit();
                 }
+            }
+
+        }
+        private void CheckLLCUpdate()
+        {
+            bool HasUpdate = false;
+            //获取本地版本
+            dynamic local_version = JsonConvert.DeserializeObject<dynamic>(File.ReadAllText(Path.Combine(App_path, "LLC_zh-CN\\Info\\version.json"))).version;
+            try
+            {
+                // 使用 GitHub 的 latest 重定向来获取最新 release 的 tag
+                var latestUrl = "https://github.com/LocalizeLimbusCompany/LocalizeLimbusCompany/releases/latest";
+                string? latestTag = null;
+                using (var handler = new HttpClientHandler() { AllowAutoRedirect = false })
+                using (var client = new HttpClient(handler))
+                {
+                    client.DefaultRequestHeaders.UserAgent.ParseAdd("LimbusCompanyLocalizeCustomer/1.0");
+                    var resp = client.GetAsync(latestUrl).Result;
+                    if (resp.Headers.Location != null)
+                    {
+                        var baseUri = resp.RequestMessage.RequestUri;
+                        var abs = new Uri(baseUri, resp.Headers.Location);
+                        latestTag = abs.Segments.Last().TrimEnd('/');
+                    }
+                }
+                if (string.IsNullOrEmpty(latestTag))
+                {
+                    using (var client = new HttpClient())
+                    {
+                        client.DefaultRequestHeaders.UserAgent.ParseAdd("LimbusCompanyLocalizeCustomer/1.0");
+                        var final = client.GetAsync(latestUrl).Result;
+                        latestTag = final.RequestMessage?.RequestUri?.Segments.Last()?.TrimEnd('/');
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(latestTag))
+                {
+                    var localStr = local_version?.ToString() ?? string.Empty;
+                    HasUpdate = !string.Equals(latestTag, localStr, StringComparison.OrdinalIgnoreCase);
+                }
+                else
+                {
+                    Logger.Error("检查 LLC 更新时无法解析远程 tag。");
+                }
+            }
+            catch (Exception ex)
+            {
+                HasUpdate = false;
+                ExceptionNoticeHandle(ex, "检查LLC更新失败！");
+                Logger.Error("检查 LLC 更新失败: " + ex.ToString());
+            }
+            if (HasUpdate)
+            {
+                var dia_result = MessageBox.Show("零协会汉化存在更新！是否自动更新？\n不更新也可继续使用本编辑器，但无法修改最新汉化内容\n你也可以手动覆盖文件更新", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+                if (dia_result == DialogResult.Yes)
+                {
+                    var result = DownloadLatestZeroAssoLLCAsync();
+                    if (result == null)
+                    {
+                        MessageBox.Show("更新失败。请重试或尝试手动覆盖更新。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+            else
+            {
+                new Notification.Config(this, "提示", "未发现更新",TType.Info,TAlignFrom.BR).SetShowInWindow().open();
             }
         }
         private void MainForm_KeyDown(object sender, KeyEventArgs e)
@@ -1243,13 +1309,20 @@ namespace LinbusCompanyLocalizeCustomer
                     }
                 }
 
-                new Notification.Config(new Target(this), "提示", "已将项目中的修改应用到本地文件（LLCPath），并已同步内存数据。保存项目后调用 ApplyProjectJsonToUI 以重新应用项目覆盖到界面。", TType.Info, TAlignFrom.BR).SetShowInWindow().SetAutoClose(5).open();
+                // 4）保存项目
+                SaveCurrentPrjButton_Click(null, null);
+                new Notification.Config(new Target(this), "提示", "已将项目中的修改应用到本地汉化文件，并已自动保存项目。", TType.Info, TAlignFrom.BR).SetShowInWindow().SetAutoClose(5).open();
             }
             catch (Exception ex)
             {
                 ExceptionNoticeHandle(ex, "应用修改到本地文件时出错");
                 Logger.Error(ex.ToString());
             }
+        }
+
+        private void CheckLLCUpdateButton_Click(object sender, EventArgs e)
+        {
+            CheckLLCUpdate();
         }
     }
 

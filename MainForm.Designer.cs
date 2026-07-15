@@ -44,6 +44,7 @@
             panel1 = new Panel();
             ExportToJsonFolderBrowserDialog = new FolderBrowserDialog();
             ExportToZipSaveFileDialog = new SaveFileDialog();
+            CheckLLCUpdateButton = new AntdUI.ButtonShadow();
             IdtInfoGroup.SuspendLayout();
             groupBox1.SuspendLayout();
             panel1.SuspendLayout();
@@ -115,6 +116,7 @@
             // 
             // groupBox1
             // 
+            groupBox1.Controls.Add(CheckLLCUpdateButton);
             groupBox1.Controls.Add(SaveCurrentPrjButton);
             groupBox1.Controls.Add(ApplyModifyToLocalFilesButton);
             groupBox1.Location = new Point(503, 667);
@@ -179,6 +181,16 @@
             ExportToZipSaveFileDialog.DefaultExt = "zip";
             ExportToZipSaveFileDialog.Filter = "Zip压缩文件|*.zip";
             // 
+            // CheckLLCUpdateButton
+            // 
+            CheckLLCUpdateButton.Location = new Point(458, 49);
+            CheckLLCUpdateButton.Name = "CheckLLCUpdateButton";
+            CheckLLCUpdateButton.Size = new Size(228, 65);
+            CheckLLCUpdateButton.TabIndex = 8;
+            CheckLLCUpdateButton.Text = "检查汉化更新";
+            LCLCToolTip.SetTip(CheckLLCUpdateButton, "保存项目文件\r\n快捷键:Ctrl+S");
+            CheckLLCUpdateButton.Click += CheckLLCUpdateButton_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(14F, 31F);
@@ -189,7 +201,6 @@
             KeyPreview = true;
             Name = "MainForm";
             Text = "边狱巴士公司汉化编辑器";
-           
             KeyDown += MainForm_KeyDown;
             IdtInfoGroup.ResumeLayout(false);
             groupBox1.ResumeLayout(false);
@@ -214,5 +225,6 @@
         private AntdUI.ButtonShadow SaveCurrentPrjButton;
         private FolderBrowserDialog ExportToJsonFolderBrowserDialog;
         private SaveFileDialog ExportToZipSaveFileDialog;
+        private AntdUI.ButtonShadow CheckLLCUpdateButton;
     }
 }
