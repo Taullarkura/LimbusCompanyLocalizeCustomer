@@ -64,6 +64,33 @@
 本项目采用 AGPL-3.0（GNU Affero General Public License）协议。
 更多信息和许可证文本请参见：https://www.gnu.org/licenses/agpl-3.0.html
 
+第三方许可与致谢
+---
+本工具所使用的汉化基础文件 **`Localize Limbus Company`**  
+由 **`Localize Limbus Company(都市零协会)`** 创作，并以 [知识共享署名-非商业性使用-相同方式共享 4.0 国际许可协议 (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/) 提供。
+
+| 项目 | 信息 |
+|------|------|
+| **原作品** | `Localize Limbus Company` |
+| **原作者** | `Localize Limbus Company(都市零协会)` |
+| **许可协议** | [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) |
+| **原许可文件** | 随下载文件一同提供，见 `LICENSE` 文件 |
+
+> 本工具输出的任何改编/衍生汉化文件，均是基于上述原作品的改编作品，  
+> **同样强制采用 CC BY-NC-SA 4.0 协议发布**。  
+> 修改内容主要包括：人格名、技能名等。
+
+使用须知
+---
+- 禁止将本工具产出的改编文件用于**商业目的**。
+- 如需分享改编文件，必须**保留原作者署名**、**声明修改内容**，并且**使用相同的 CC BY-NC-SA 4.0 许可证**。
+- 原始 `LICENSE` 文件和完整的许可信息会随下载文件一同保留，切勿删除。
+
+免责声明
+---
+本工具按“原样”提供，原作者及开发者不对汉化文本的准确性、适用性做任何担保。  
+使用本项目即视为你已知悉并同意上述许可条款。
+
 贡献
 ---
 欢迎 Issues 与 PR。提交时请包含变更说明与复现步骤。
